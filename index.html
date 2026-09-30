@@ -496,7 +496,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
         <div style="display:grid;gap:36px;min-width:0">
           <p>Racontez-nous votre idée en quelques lignes : type de projet, délai, budget indicatif. On revient vers vous par email avec des questions précises.</p>
           <div class="form">
-            <div class="field"><label for="f-name">Nom</label><input type="text" id="f-name" name="nom" autocomplete="name" placeholder="Camille Martin" required></div>
+            <div class="field"><label for="f-name">Nom</label><input type="text" id="f-name" name="name" autocomplete="name" placeholder="Camille Martin" required></div>
             <div class="field"><label for="f-email">Votre email</label><input type="email" id="f-email" name="email" autocomplete="email" placeholder="vous@entreprise.fr" required></div>
             <div class="field field-wide">
               <fieldset>
@@ -557,7 +557,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 
   // contact form: messages go through Web3Forms, so no address is ever shown on the page
   const FORM_ENDPOINT = 'https://api.web3forms.com/submit';
-  const FORM_KEY = 'WEB3FORMS_ACCESS_KEY';
+  const FORM_KEY = '8ee2ee98-ed6b-44c8-b568-72974f800056';
   const form = $('#contact-form'), status = $('#form-status'), submit = $('#f-submit');
   const setStatus = (msg, kind) => { status.textContent = msg; status.className = 'form-status' + (kind ? ' ' + kind : ''); };
   form.addEventListener('submit', async (e) => {
@@ -585,8 +585,6 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
     } finally { submit.disabled = false; }
   });
   $$('#contact-form input, #contact-form textarea').forEach((f) => f.addEventListener('input', () => f.removeAttribute('aria-invalid')));
-  // until the Web3Forms key is set, say so instead of pretending to send
-  if (FORM_KEY === 'WEB3FORMS_ACCESS_KEY') { submit.disabled = true; setStatus('Le formulaire de contact ouvre très bientôt.'); }
 
   // split manifesto into words
   $$('[data-words]').forEach((p) => {
