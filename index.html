@@ -273,6 +273,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .copy:hover { background: var(--bone); color: var(--ink); }
 .contact-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; border-top: 1px solid var(--line); padding-top: 24px; }
 .contact-grid div { display: grid; gap: 6px; font-size: 15px; }
+.contact-grid .ref { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--mute); }
 @media (max-width: 760px) { .contact-row { grid-template-columns: 1fr; } .contact-grid { grid-template-columns: 1fr 1fr; } }
 
 /* ---------- footer ---------- */
@@ -366,7 +367,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
         <h3 class="svc-name">Sites<br><span class="ghost">internet</span></h3>
         <div class="svc-body">
           <p>Sites vitrines, e-commerce et sites éditoriaux. Rapides, bien référencés, et animés avec la même exigence que ce site.</p>
-          <ul class="svc-list"><li><span>Front</span><span>Next.js · Astro</span></li><li><span>Commerce</span><span>Shopify · Stripe</span></li><li><span>Contenu</span><span>Sanity · Strapi</span></li><li><span>Motion</span><span>GSAP · WebGL</span></li></ul>
+          <ul class="svc-list"><li><span>Front</span><span>Next.js · Astro</span></li><li><span>Commerce</span><span>Shopify · Stripe</span></li><li><span>Contenu</span><span>Sanity · Strapi</span></li><li><span>Motion</span><span>GSAP · WebGL</span></li><li><span>Référence</span><span>Projet Epicène</span></li></ul>
         </div>
       </article>
       <article class="svc">
@@ -470,7 +471,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
         <a class="cta" href="mailto:contact@cmp.studio" data-magnetic><span>Démarrer<br>un projet</span></a>
       </div>
       <div class="contact-grid" style="margin-top:56px">
-        <div><span class="eyebrow">Sites</span>Vitrine · E-commerce</div>
+        <div><span class="eyebrow">Sites</span>Vitrine · E-commerce<span class="ref">Réf. Projet Epicène</span></div>
         <div><span class="eyebrow">Mobile</span>iPhone · iPad</div>
         <div><span class="eyebrow">Web apps</span>SaaS · Outils métiers</div>
         <div><span class="eyebrow">Logiciels</span>API · Automatisation</div>
