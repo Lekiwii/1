@@ -585,6 +585,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
     } finally { submit.disabled = false; }
   });
   $$('#contact-form input, #contact-form textarea').forEach((f) => f.addEventListener('input', () => f.removeAttribute('aria-invalid')));
+  // until the Web3Forms key is set, say so instead of pretending to send
+  if (FORM_KEY === 'WEB3FORMS_ACCESS_KEY') { submit.disabled = true; setStatus('Le formulaire de contact ouvre très bientôt.'); }
 
   // split manifesto into words
   $$('[data-words]').forEach((p) => {
