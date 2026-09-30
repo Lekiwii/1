@@ -31,30 +31,32 @@ Exemple d'alerte :
 💰 Revente nette : 1088.20 € → +198.20 € (+22 %)
 ```
 
-## Installation
+## Installation sur Windows (le plus simple)
 
-Il faut Python 3.10 ou plus récent.
+1. Installe Python depuis [python.org](https://www.python.org/downloads/) en cochant
+   **« Add python.exe to PATH »** (inutile si Python est déjà installé).
+2. Dézippe `pokemon-bot.zip`, ouvre le dossier et double-clique sur **`LANCER.bat`**.
+3. La première fois, un assistant te demande :
+   - le token de ton bot Telegram : sur Telegram, ouvre [@BotFather](https://t.me/BotFather),
+     envoie `/newbot` et suis les étapes ;
+   - tes clés eBay **Production** (App ID et Cert ID), à créer gratuitement sur
+     [developer.ebay.com](https://developer.ebay.com) ;
+   - d'envoyer `/start` à ton bot : il reconnaît ton compte tout seul.
+
+   Il vérifie chaque clé, puis enregistre tout dans `.env`. Ensuite, un double-clic sur
+   `LANCER.bat` suffit. Le bot tourne tant que la fenêtre reste ouverte.
+
+## Installation sur Mac ou Linux
 
 ```bash
 cd pokemon-bot
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
+python bot.py   # l'assistant de configuration se lance au premier démarrage
 ```
 
-Puis remplis `.env` :
-
-1. **Telegram** : parle à [@BotFather](https://t.me/BotFather), `/newbot`, et copie le token dans
-   `TELEGRAM_TOKEN`.
-2. **eBay** : crée un compte sur [developer.ebay.com](https://developer.ebay.com), puis un jeu de clés
-   **Production**. Copie l'App ID dans `EBAY_CLIENT_ID` et le Cert ID dans `EBAY_CLIENT_SECRET`.
-   L'API Browse est gratuite (5 000 appels par jour).
-3. Lance `python bot.py` et envoie `/start` au bot sur Telegram. Il répond avec ton identifiant :
-   mets-le dans `TELEGRAM_CHAT_ID`, puis relance le bot. Seul ce compte peut utiliser le bot et
-   recevoir les alertes.
-
-Pour qu'il tourne en permanence, lance-le sur un serveur ou un VPS (`nohup python bot.py &`,
-un service systemd, ou un conteneur).
+Pour qu'il tourne en permanence, lance-le sur un serveur ou un VPS (un service systemd ou un
+conteneur, par exemple).
 
 ## Commandes
 

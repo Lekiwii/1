@@ -1,12 +1,15 @@
 """Bot Telegram : scanne eBay et envoie les cartes Pokémon gradées vendues sous leur cote."""
 import html
 import logging
+import os
+import sys
 
 import httpx
 from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import Application, CommandHandler, ContextTypes
 
+from pokedeals import assistant
 from pokedeals.config import Config
 from pokedeals.deals import Deal, find_deals
 from pokedeals.ebay import EbayClient
@@ -143,10 +146,17 @@ async def post_shutdown(app: Application) -> None:
 
 def main() -> None:
     cfg = Config.from_env()
-    missing = [n for n, v in [("TELEGRAM_TOKEN", cfg.telegram_token), ("EBAY_CLIENT_ID", cfg.ebay_client_id),
-                              ("EBAY_CLIENT_SECRET", cfg.ebay_client_secret)] if not v]
-    if missing:
-        raise SystemExit(f"Variables manquantes dans .env : {', '.join(missing)}")
+    required = {"TELEGRAM_TOKEN": cfg.telegram_token, "EBAY_CLIENT_ID": cfg.ebay_client_id,
+                "EBAY_CLIENT_SECRET": cfg.ebay_client_secret,
+                "TELEGRAM_CHAT_ID": str(cfg.telegram_chat_id or "")}
+    if not all(required.values()):
+        if not sys.stdin.isatty():
+            missing = [name for name, value in required.items() if not value]
+            raise SystemExit(f"Variables manquantes dans .env : {', '.join(missing)}")
+        assistant.run(required)
+        for key in required:
+            os.environ.pop(key, None)
+        cfg = Config.from_env()
 
     app = Application.builder().token(cfg.telegram_token).post_init(post_init).post_shutdown(post_shutdown).build()
     app.bot_data["cfg"] = cfg
