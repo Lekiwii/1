@@ -270,14 +270,36 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .contact-title { font-family: var(--f-display); font-weight: 850; font-variation-settings: "wdth" 125; font-size: clamp(3.2rem, 11.5vw, 13.5rem); line-height: .82; letter-spacing: -.06em; margin: 0; text-wrap: balance; }
 .contact-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 32px; align-items: end; }
 .contact-row p { margin: 0; color: var(--mute); max-width: 40ch; }
-.cta { position: relative; display: inline-grid; place-items: center; width: clamp(150px, 16vw, 210px); aspect-ratio: 1; border-radius: 50%; background: var(--bone); color: var(--ink); font-family: var(--f-mono); font-size: 12.5px; letter-spacing: .12em; text-transform: uppercase; text-align: center; line-height: 1.4; overflow: hidden; will-change: transform; }
+.cta { position: relative; display: inline-grid; border: 0; cursor: pointer; place-items: center; width: clamp(150px, 16vw, 210px); aspect-ratio: 1; border-radius: 50%; background: var(--bone); color: var(--ink); font-family: var(--f-mono); font-size: 12.5px; letter-spacing: .12em; text-transform: uppercase; text-align: center; line-height: 1.4; overflow: hidden; will-change: transform; }
 .cta::before { content: ""; position: absolute; inset: 0; background: var(--signal); border-radius: 50%; transform: translateY(101%); transition: transform .6s var(--ease); }
 .cta:hover::before { transform: translateY(0); }
 .cta span { position: relative; pointer-events: none; }
-.mail { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
-.mail-addr { font-family: var(--f-display); font-weight: 600; font-variation-settings: "wdth" 105; font-size: clamp(1.4rem, 3vw, 2.6rem); letter-spacing: -.03em; user-select: all; border-bottom: 1px solid var(--line); padding-bottom: 4px; overflow-wrap: anywhere; }
-.copy { font-family: var(--f-mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; border: 1px solid var(--line); border-radius: 99px; padding: 10px 16px; transition: background .3s, color .3s; }
-.copy:hover { background: var(--bone); color: var(--ink); }
+.form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 32px; max-width: 880px; }
+.field { display: grid; gap: 10px; min-width: 0; }
+.field-wide { grid-column: 1 / -1; }
+.field label, .field legend { font-family: var(--f-mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); padding: 0; }
+.field fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 12px; min-width: 0; }
+.field input[type="text"], .field input[type="email"], .field textarea { width: 100%; font: 400 clamp(1.1rem, 1.6vw, 1.4rem)/1.35 var(--f-body); color: var(--bone); background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: 6px 0 12px; transition: border-color .3s; }
+.field textarea { resize: vertical; min-height: 7.5em; }
+.field input::placeholder, .field textarea::placeholder { color: var(--mute); opacity: .6; }
+.field input:focus, .field textarea:focus { outline: none; border-bottom-color: var(--signal); }
+.field input:focus-visible, .field textarea:focus-visible { outline: none; box-shadow: 0 1px 0 var(--signal); }
+.field [aria-invalid="true"] { border-bottom-color: var(--heat); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { position: relative; }
+.chip input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.chip span { display: inline-flex; align-items: center; height: 36px; padding-inline: 16px; border: 1px solid var(--line); border-radius: 999px; font-family: var(--f-mono); font-size: 12px; letter-spacing: .06em; color: var(--bone); transition: background .25s, color .25s, border-color .25s; }
+.chip input:checked + span { background: var(--bone); color: var(--ink); border-color: var(--bone); }
+.chip input:focus-visible + span { outline: 1px solid var(--signal); outline-offset: 3px; }
+.hp { position: absolute !important; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.form-status { grid-column: 1 / -1; margin: 0; min-height: 1.5em; font-family: var(--f-mono); font-size: 13px; letter-spacing: .04em; color: var(--mute); }
+.form-status.ok { color: var(--signal); }
+.form-status.err { color: var(--heat); }
+.cta[disabled] { opacity: .55; cursor: progress; }
+@media (max-width: 760px) {
+  .form { grid-template-columns: 1fr; }
+  .contact-row > div { background: rgba(7,8,11,.62); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); margin-inline: -12px; padding: 20px 12px; border-radius: 8px; }
+}
 .contact-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; border-top: 1px solid var(--line); padding-top: 24px; }
 .contact-grid div { display: grid; gap: 6px; font-size: 15px; }
 .contact-grid .ref { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--mute); }
@@ -470,13 +492,31 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
     <span class="eyebrow">(Contact)</span>
     <h2 class="contact-title"><span class="line"><span>Un projet ?</span></span><span class="line"><span><span class="italic">Parlons-en.</span></span></span></h2>
     <div>
-      <div class="contact-row">
-        <div style="display:grid;gap:24px">
-          <p>Racontez-nous votre idée en quelques lignes : type de projet, délai, budget indicatif. On revient vers vous avec des questions précises.</p>
-          <div class="mail"><span class="mail-addr" id="mail">contact@cmp.studio</span><button class="copy" id="copy" type="button">Copier</button></div>
+      <form class="contact-row" id="contact-form" novalidate>
+        <div style="display:grid;gap:36px;min-width:0">
+          <p>Racontez-nous votre idée en quelques lignes : type de projet, délai, budget indicatif. On revient vers vous par email avec des questions précises.</p>
+          <div class="form">
+            <div class="field"><label for="f-name">Nom</label><input type="text" id="f-name" name="nom" autocomplete="name" placeholder="Camille Martin" required></div>
+            <div class="field"><label for="f-email">Votre email</label><input type="email" id="f-email" name="email" autocomplete="email" placeholder="vous@entreprise.fr" required></div>
+            <div class="field field-wide">
+              <fieldset>
+                <legend>Type de projet</legend>
+                <div class="chips">
+                  <label class="chip"><input type="radio" name="projet" value="Site internet" id="f-t1" checked><span>Site internet</span></label>
+                  <label class="chip"><input type="radio" name="projet" value="App iPhone" id="f-t2"><span>App iPhone</span></label>
+                  <label class="chip"><input type="radio" name="projet" value="Web app / SaaS" id="f-t3"><span>Web app / SaaS</span></label>
+                  <label class="chip"><input type="radio" name="projet" value="Logiciel sur mesure" id="f-t4"><span>Logiciel sur mesure</span></label>
+                  <label class="chip"><input type="radio" name="projet" value="Autre" id="f-t5"><span>Autre</span></label>
+                </div>
+              </fieldset>
+            </div>
+            <div class="field field-wide"><label for="f-msg">Votre projet</label><textarea id="f-msg" name="message" rows="4" placeholder="Objectif, délai souhaité, budget indicatif…" required></textarea></div>
+            <div class="hp" aria-hidden="true"><label for="f-botcheck">Ne pas cocher</label><input type="checkbox" id="f-botcheck" name="botcheck" tabindex="-1" autocomplete="off"></div>
+            <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+          </div>
         </div>
-        <a class="cta" href="mailto:contact@cmp.studio" data-magnetic><span>Démarrer<br>un projet</span></a>
-      </div>
+        <button class="cta" type="submit" id="f-submit" data-magnetic><span>Envoyer<br>le message</span></button>
+      </form>
       <div class="contact-grid" style="margin-top:56px">
         <div><span class="eyebrow">Sites</span>Vitrine · E-commerce<span class="ref">Réf. Projet Epicène</span></div>
         <div><span class="eyebrow">Mobile</span>iPhone · iPad</div>
@@ -515,15 +555,36 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   const tick = () => { clock.textContent = 'Paris ' + fmt.format(new Date()); };
   tick(); setInterval(tick, 1000);
 
-  // copy email
-  $('#copy').addEventListener('click', (e) => {
-    const btn = e.currentTarget, txt = $('#mail').textContent;
-    const done = (ok) => { btn.textContent = ok ? 'Copié' : 'Sélectionné'; setTimeout(() => btn.textContent = 'Copier', 1600); };
+  // contact form: messages go through Web3Forms, so no address is ever shown on the page
+  const FORM_ENDPOINT = 'https://api.web3forms.com/submit';
+  const FORM_KEY = 'WEB3FORMS_ACCESS_KEY';
+  const form = $('#contact-form'), status = $('#form-status'), submit = $('#f-submit');
+  const setStatus = (msg, kind) => { status.textContent = msg; status.className = 'form-status' + (kind ? ' ' + kind : ''); };
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fields = [$('#f-name'), $('#f-email'), $('#f-msg')];
+    let firstBad = null;
+    fields.forEach((f) => { const bad = !f.value.trim() || !f.checkValidity(); f.setAttribute('aria-invalid', bad ? 'true' : 'false'); if (bad && !firstBad) firstBad = f; });
+    if (firstBad) {
+      setStatus(firstBad.id === 'f-email' && firstBad.value.trim() ? 'Cette adresse email ne semble pas valide.' : 'Remplissez votre nom, votre email et quelques mots sur le projet.', 'err');
+      firstBad.focus(); return;
+    }
+    submit.disabled = true; setStatus('Envoi en cours…');
     try {
-      navigator.clipboard.writeText(txt).then(() => done(true), () => { selectMail(); done(false); });
-    } catch (_) { selectMail(); done(false); }
+      const data = new FormData(form);
+      data.append('access_key', FORM_KEY);
+      data.append('subject', 'Nouveau projet via le site CMP : ' + data.get('projet'));
+      data.append('from_name', 'Site CMP');
+      const res = await fetch(FORM_ENDPOINT, { method: 'POST', body: data, headers: { Accept: 'application/json' } });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) throw new Error('HTTP ' + res.status);
+      form.reset();
+      setStatus('Message envoyé. On vous répond par email très vite.', 'ok');
+    } catch (_) {
+      setStatus("L'envoi n'a pas abouti. Vérifiez votre connexion et réessayez dans un instant.", 'err');
+    } finally { submit.disabled = false; }
   });
-  function selectMail() { const r = document.createRange(); r.selectNodeContents($('#mail')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+  $$('#contact-form input, #contact-form textarea').forEach((f) => f.addEventListener('input', () => f.removeAttribute('aria-invalid')));
 
   // split manifesto into words
   $$('[data-words]').forEach((p) => {
@@ -745,7 +806,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
     });
 
     // contact
-    gsap.from('.cta', { scale: 0, rotate: -90, duration: 1.4, ease: 'elastic.out(1, .55)', scrollTrigger: { trigger: '.contact-row', start: 'top 85%' } });
+    gsap.from('.cta', { scale: 0, rotate: -90, duration: 1.4, ease: 'elastic.out(1, .55)', scrollTrigger: { trigger: '#f-submit', start: 'top bottom' } });
     gsap.from('.contact-grid > div', { y: 30, opacity: 0, stagger: .07, duration: 1, ease: 'expo.out', scrollTrigger: { trigger: '.contact-grid', start: 'top 92%' } });
 
     // footer letters rise at different speeds
@@ -981,7 +1042,7 @@ const S = {
   work:      { x: -2.5, y: 1.05, s: .5,   amp: .38, freq: 1.8,  twist: .3,  orbit: 1.3,  tiles: .0,  tilt: .5,  cam: 8,   spin: .3 },
   process:   { x: -2.7, y: -1.1, s: .62,  amp: .5,  freq: .75,  twist: .9,  orbit: 1.8,  tiles: .35, tilt: 1.2, cam: 7.4, spin: .18 },
   stack:     { x: 0,    y: .2,   s: .6,   amp: .2,  freq: 1.4,  twist: 0,   orbit: 2.4,  tiles: .6,  tilt: .3,  cam: 7.8, spin: .4 },
-  contact:   { x: 2.3,  y: -.5,  s: .95, amp: .28, freq: 1.1,  twist: .2,  orbit: 2.3,  tiles: 1,   tilt: .45, cam: 7,   spin: .14 },
+  contact:   { x: 3.4,  y: .75,  s: .78, amp: .28, freq: 1.1,  twist: .2,  orbit: 2.3,  tiles: 1,   tilt: .45, cam: 7,   spin: .14 },
   end:       { x: 0,    y: .5,   s: 1.05, amp: .32, freq: 1.2,  twist: 0,   orbit: 2.6,  tiles: 1,   tilt: .2,  cam: 7.6, spin: .14 },
 };
 const keys = Object.keys(S.hero);
