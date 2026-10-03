@@ -43,3 +43,8 @@ def parse_grade(title: str) -> Grade | None:
         return None
     grader, grade = found.pop()
     return Grade(grader, grade)
+
+
+def strip_grade(title: str) -> str:
+    """Le titre sans la mention de la note (« Umbreon PSA 10 » -> « Umbreon »)."""
+    return _GRADE_RE.sub(" ", title)

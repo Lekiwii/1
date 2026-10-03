@@ -67,6 +67,8 @@ conteneur, par exemple).
 | `/ajouter Charizard ex 199/165` | surveiller une carte : mets le nom **et le numéro** pour éviter les mélanges |
 | `/retirer Charizard ex 199/165` | ne plus la surveiller |
 | `/regles` | seuils et frais utilisés |
+| `/estimer Umbreon VMAX 215/203 PSA 10 650` | dit si une offre vue ailleurs (Vinted, Leboncoin, salon…) est rentable |
+| `/liens` | recherches Vinted et Leboncoin prêtes pour y activer les alertes de l'appli |
 
 ## Réglages (`.env`)
 
@@ -88,7 +90,10 @@ conteneur, par exemple).
   accès, il suffit d'ajouter un client qui renvoie des `Listing` comme `pokedeals/ebay.py`.
 - **TCGplayer** : l'API n'accepte plus de nouveaux développeurs.
 - **Vinted, Leboncoin, Facebook Marketplace** : pas d'API publique, et leurs conditions
-  d'utilisation interdisent le scraping. Le bot ne les scrape donc pas.
+  d'utilisation interdisent le scraping (Leboncoin bloque les robots). Le bot ne lit donc pas
+  leurs annonces. À la place, `/liens` te donne les recherches toutes prêtes : tu les sauvegardes
+  dans l'appli avec les notifications, et quand une annonce sort, `/estimer` te dit si elle est
+  rentable d'après la cote eBay.
 
 ## Limites à connaître
 

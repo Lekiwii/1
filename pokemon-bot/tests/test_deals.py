@@ -44,3 +44,26 @@ def test_find_deals_flags_underpriced_card_from_trusted_seller():
     deals = asyncio.run(find_deals(["Umbreon VMAX 215/203"], cfg(), ebay, None))
     assert [d.listing.item_id for d in deals] == ["1"]
     assert deals[0].market_eur == 1400 and deals[0].profit_eur > 400
+
+
+def test_parse_offer_splits_card_grade_and_price():
+    from pokedeals.deals import parse_offer
+    from pokedeals.grading import Grade
+
+    assert parse_offer("Umbreon VMAX 215/203 PSA 10 650") == ("Umbreon VMAX 215/203", Grade("PSA", 10), 650)
+    assert parse_offer("Dracaufeu ex 199/165 CGC 9,5 300 €") == ("Dracaufeu ex 199/165", Grade("CGC", 9.5), 300)
+    assert parse_offer("Mew PSA 10") is None  # pas de prix
+
+
+def test_estimate_uses_same_grade_comps_only():
+    from pokedeals.deals import estimate
+    from pokedeals.grading import Grade
+
+    ebay = FakeEbay([
+        listing("1", "Umbreon VMAX 215/203 PSA 10", 1300),
+        listing("2", "Umbreon VMAX 215/203 PSA 10", 1400),
+        listing("3", "Umbreon VMAX 215/203 PSA 10", 1500),
+        listing("4", "Umbreon VMAX 215/203 PSA 9", 400),
+    ])
+    result = asyncio.run(estimate("Umbreon VMAX 215/203", Grade("PSA", 10.0), 650, cfg(), ebay, None))
+    assert result.market_eur == 1400 and result.profit_eur == round(1400 * 0.87 - 8 - 650, 2)

@@ -11,7 +11,8 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 
 from pokedeals import assistant
 from pokedeals.config import Config
-from pokedeals.deals import Deal, find_deals
+from pokedeals import links
+from pokedeals.deals import Deal, estimate, find_deals, parse_offer
 from pokedeals.ebay import EbayClient
 from pokedeals.pricing import PriceCharting
 from pokedeals.storage import Storage
@@ -26,7 +27,11 @@ HELP = (
     "/liste — cartes surveillées\n"
     "/ajouter &lt;carte&gt; — ex. <code>/ajouter Charizard ex 199/165</code>\n"
     "/retirer &lt;carte&gt; — arrêter de surveiller une carte\n"
-    "/regles — seuils de rentabilité et frais pris en compte"
+    "/regles — seuils de rentabilité et frais pris en compte\n\n"
+    "<b>Vinted, Leboncoin, salons…</b>\n"
+    "/estimer &lt;carte&gt; &lt;note&gt; &lt;prix&gt; — ex. <code>/estimer Umbreon VMAX 215/203 PSA 10 650</code> : "
+    "le bot te dit si l'offre est rentable\n"
+    "/liens — recherches Vinted et Leboncoin prêtes, pour y activer les alertes"
 )
 
 
@@ -121,6 +126,56 @@ async def regles(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
 
 
+async def estimer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not authorized(update, context):
+        return
+    offer = parse_offer(" ".join(context.args))
+    if offer is None:
+        await update.message.reply_text(
+            "Usage : /estimer <carte> <note> <prix>\nEx. : /estimer Umbreon VMAX 215/203 PSA 10 650"
+        )
+        return
+    query, grade, price = offer
+    await update.message.reply_text(f"Je cherche la cote de {query} {grade}…")
+    bd = context.bot_data
+    result = await estimate(query, grade, price, bd["cfg"], bd["ebay"], bd["pricecharting"])
+    if result is None:
+        await update.message.reply_text(
+            f"Pas assez d'annonces {grade} sur eBay pour estimer {query}. "
+            "Essaie avec le nom anglais et le numéro de la carte."
+        )
+        return
+    good = result.profit_eur >= bd["cfg"].min_profit_eur and result.roi_pct >= bd["cfg"].min_roi_pct
+    verdict = "✅ Bonne affaire" if good else ("⚠️ Marge trop faible" if result.profit_eur > 0 else "❌ Pas rentable")
+    await update.message.reply_text(
+        f"<b>{verdict}</b>\n"
+        f"🏷 {html.escape(query)} · {grade}\n"
+        f"💶 Prix demandé : {price:.2f} €\n"
+        f"📈 Cote : {result.market_eur:.2f} € ({html.escape(result.market_source)})\n"
+        f"💰 Revente nette : {result.net_resale_eur:.2f} € → <b>{result.profit_eur:+.2f} € ({result.roi_pct:+.0f} %)</b>\n"
+        f"Vérifie le numéro de certification avant d'acheter.",
+        parse_mode=ParseMode.HTML,
+    )
+
+
+async def liens(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not authorized(update, context):
+        return
+    lines = [
+        f"• {html.escape(q)} : <a href=\"{html.escape(links.vinted(q))}\">Vinted</a> · "
+        f"<a href=\"{html.escape(links.leboncoin(q))}\">Leboncoin</a>"
+        for q in context.bot_data["storage"].watchlist()
+    ]
+    await update.message.reply_text(
+        "<b>Recherches Vinted et Leboncoin</b>\n"
+        "Ouvre un lien dans l'appli, puis « Sauvegarder la recherche » avec les notifications activées : "
+        "tu es prévenu dès qu'une annonce sort. Puis envoie-la-moi avec /estimer pour savoir si elle est rentable.\n\n"
+        + "\n".join(lines),
+        parse_mode=ParseMode.HTML,
+        disable_web_page_preview=True,
+    )
+
+
 async def scheduled_scan(context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
         await run_scan(context.application, context.bot_data["cfg"].telegram_chat_id, announce_empty=False)
@@ -162,7 +217,8 @@ def main() -> None:
     app.bot_data["cfg"] = cfg
     app.bot_data["storage"] = Storage(cfg.db_path)
     for name, handler in [("start", start), ("help", start), ("scan", scan), ("liste", liste),
-                          ("ajouter", ajouter), ("retirer", retirer), ("regles", regles)]:
+                          ("ajouter", ajouter), ("retirer", retirer), ("regles", regles),
+                          ("estimer", estimer), ("liens", liens)]:
         app.add_handler(CommandHandler(name, handler))
     app.run_polling()
 
