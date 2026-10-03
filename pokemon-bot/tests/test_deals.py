@@ -1,7 +1,7 @@
 import asyncio
 
 from pokedeals.config import Config
-from pokedeals.deals import find_deals, resale_profit
+from pokedeals.deals import Sources, find_deals, resale_profit
 from pokedeals.ebay import Listing
 from pokedeals.pricing import comps_median
 
@@ -41,7 +41,7 @@ def test_find_deals_flags_underpriced_card_from_trusted_seller():
         listing("5", "Umbreon VMAX 215/203 PSA 10", 650, feedback=90),  # vendeur douteux
         listing("6", "Umbreon VMAX 215/203 PSA 9", 300),                 # pas assez de comparables PSA 9
     ])
-    deals = asyncio.run(find_deals(["Umbreon VMAX 215/203"], cfg(), ebay, None))
+    deals = asyncio.run(find_deals(["Umbreon VMAX 215/203"], cfg(min_confidence=0), Sources(ebay)))
     assert [d.listing.item_id for d in deals] == ["1"]
     assert deals[0].market_eur == 1400 and deals[0].profit_eur > 400
 
@@ -65,5 +65,5 @@ def test_estimate_uses_same_grade_comps_only():
         listing("3", "Umbreon VMAX 215/203 PSA 10", 1500),
         listing("4", "Umbreon VMAX 215/203 PSA 9", 400),
     ])
-    result = asyncio.run(estimate("Umbreon VMAX 215/203", Grade("PSA", 10.0), 650, cfg(), ebay, None))
+    result = asyncio.run(estimate("Umbreon VMAX 215/203", Grade("PSA", 10.0), 650, cfg(), Sources(ebay)))
     assert result.market_eur == 1400 and result.profit_eur == round(1400 * 0.87 - 8 - 650, 2)

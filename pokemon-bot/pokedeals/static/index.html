@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pokémon Deals</title>
+<link rel="icon" href="data:,">
+<style>
+:root {
+  --bg: #f4f4f2; --surface: #fcfcfb; --surface-2: #f0efec; --border: #e2e1dd;
+  --ink: #1b1b1a; --ink-2: #55554f; --ink-3: #85857e;
+  --accent: #2a78d6; --accent-ink: #ffffff;
+  --good: #0ca30c; --good-ink: #006300; --warn: #fab219; --warn-ink: #7a5200; --bad: #d03b3b; --bad-ink: #a32020;
+  --shadow: 0 1px 2px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121211; --surface: #1a1a19; --surface-2: #232321; --border: #2f2f2c;
+    --ink: #f2f2ef; --ink-2: #b9b9b2; --ink-3: #85857e;
+    --accent: #3987e5; --accent-ink: #ffffff;
+    --good-ink: #3fcf3f; --warn-ink: #fab219; --bad-ink: #ff7b7b;
+    --shadow: 0 1px 2px rgba(0,0,0,.4);
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
+button, input, select { font: inherit; color: inherit; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px; }
+header { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5; }
+.top { display: flex; align-items: center; gap: 12px 16px; padding: 10px 0; flex-wrap: wrap; }
+.brand { font-weight: 700; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+.brand-dot { width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(#d03b3b 0 46%, #1b1b1a 46% 54%, #fff 54%); border: 2px solid #1b1b1a; }
+nav { display: flex; gap: 4px; flex-wrap: wrap; }
+nav button { border: 0; background: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; color: var(--ink-2); }
+nav button.on { background: var(--surface-2); color: var(--ink); font-weight: 600; }
+.status { margin-left: auto; display: flex; align-items: center; gap: 12px; color: var(--ink-2); font-size: 13px; }
+.btn { border: 1px solid var(--border); background: var(--surface); padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+.btn:disabled { opacity: .55; cursor: default; }
+.pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--good); display: inline-block; }
+.pulse.busy { background: var(--warn); animation: blink 1s infinite; }
+@keyframes blink { 50% { opacity: .3; } }
+main { padding: 20px 0 60px; }
+h2 { font-size: 20px; margin: 0 0 4px; } .sub { color: var(--ink-2); margin: 0 0 16px; }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); }
+.notice { background: var(--surface-2); border-radius: 10px; padding: 10px 14px; color: var(--ink-2); margin-bottom: 16px; }
+.notice.err { color: var(--bad-ink); }
+.filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+.filters input, .filters select, .field input, .field select { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.kpi .v { font-size: 22px; font-weight: 700; } .kpi .l { color: var(--ink-2); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.deals { display: grid; gap: 12px; }
+.deal { display: grid; grid-template-columns: 96px 1fr auto; gap: 16px; align-items: start; }
+.deal img, .thumb { width: 96px; height: 134px; object-fit: contain; border-radius: 6px; background: var(--surface-2); }
+.deal h3 { margin: 0 0 6px; font-size: 15px; }
+.tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.tag { background: var(--surface-2); border-radius: 6px; padding: 2px 8px; font-size: 12px; color: var(--ink-2); }
+.tag.strong { color: var(--ink); font-weight: 600; }
+.nums { display: grid; grid-template-columns: repeat(4, minmax(90px, 1fr)); gap: 8px; }
+.num .l { color: var(--ink-3); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+.num .v { font-weight: 600; font-size: 15px; }
+.profit { color: var(--good-ink); }
+.side { text-align: right; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; min-width: 150px; }
+.conf { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 4px 10px; font-weight: 600; font-size: 13px; border: 1px solid var(--border); }
+.conf .ic { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 11px; font-weight: 800; }
+.conf.good .ic { background: var(--good); } .conf.good { color: var(--good-ink); }
+.conf.warn .ic { background: var(--warn); color: #1b1b1a; } .conf.warn { color: var(--warn-ink); }
+.conf.bad .ic { background: var(--bad); } .conf.bad { color: var(--bad-ink); }
+.meter { width: 150px; height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+.meter i { display: block; height: 100%; border-radius: 3px; }
+details { margin-top: 10px; } summary { cursor: pointer; color: var(--accent); }
+.reasons { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 4px; }
+.reasons li { display: flex; gap: 8px; } .reasons .k { width: 18px; flex: none; text-align: center; font-weight: 700; }
+.k.plus { color: var(--good-ink); } .k.minus { color: var(--bad-ink); } .k.warn { color: var(--warn-ink); }
+.strip { width: 100%; max-width: 720px; height: auto; display: block; overflow: visible; }
+.trend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 6px; color: var(--ink-2); font-size: 13px; }
+.trend b { color: var(--ink); }
+.up { color: var(--good-ink); } .down { color: var(--bad-ink); }
+.grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+.card { display: flex; flex-direction: column; gap: 6px; }
+.card img { width: 100%; aspect-ratio: 63/88; object-fit: contain; background: var(--surface-2); border-radius: 8px; }
+.card .name { font-weight: 600; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.form { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; align-items: end; }
+.field label { display: block; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
+.field input, .field select { width: 100%; }
+.verdict { font-size: 20px; font-weight: 700; margin: 0 0 8px; display: flex; align-items: center; gap: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+th { color: var(--ink-2); font-weight: 600; }
+.watch { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.watch img, .watch .ph { width: 64px; height: 89px; object-fit: contain; border-radius: 4px; background: var(--surface-2); }
+.empty { text-align: center; padding: 40px; color: var(--ink-2); }
+#tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--surface); padding: 6px 9px; border-radius: 6px; font-size: 12px; display: none; z-index: 20; white-space: nowrap; }
+.hidden { display: none !important; }
+@media (max-width: 760px) {
+  .deal { grid-template-columns: 72px 1fr; } .deal img { width: 72px; height: 100px; }
+  .side { grid-column: 1 / -1; align-items: flex-start; text-align: left; }
+  .nums { grid-template-columns: repeat(2, 1fr); }
+  .status { margin-left: 0; width: 100%; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap top">
+    <div class="brand"><span class="brand-dot"></span>Pokémon Deals</div>
+    <nav id="nav">
+      <button data-tab="deals" class="on">Bonnes affaires</button>
+      <button data-tab="estimate">Estimer une carte</button>
+      <button data-tab="trending">Tendances</button>
+      <button data-tab="watch">Mes cartes</button>
+      <button data-tab="settings">Réglages</button>
+    </nav>
+    <div class="status">
+      <span><span id="pulse" class="pulse"></span> <span id="statusText">Connexion…</span></span>
+      <button id="scanBtn" class="btn primary">Scanner maintenant</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- Bonnes affaires -->
+  <section id="tab-deals">
+    <h2>Bonnes affaires</h2>
+    <p class="sub">Cartes gradées en vente sous leur cote, après frais de revente. L'indice de confiance croise toutes les sources : plus il est haut, plus la revente est sûre.</p>
+    <div id="dealsError" class="notice err hidden"></div>
+    <div class="kpis">
+      <div class="panel kpi"><div class="l">Affaires en ligne</div><div class="v" id="kCount">–</div></div>
+      <div class="panel kpi"><div class="l">Fiables (≥ 70)</div><div class="v" id="kSafe">–</div></div>
+      <div class="panel kpi"><div class="l">Meilleur bénéfice</div><div class="v" id="kBest">–</div></div>
+      <div class="panel kpi"><div class="l">Bénéfice cumulé (fiables)</div><div class="v" id="kSum">–</div></div>
+    </div>
+    <div class="filters">
+      <input id="fText" placeholder="Filtrer (nom, note, site…)">
+      <select id="fConf">
+        <option value="0">Toutes les confiances</option>
+        <option value="45">À vérifier et mieux (≥ 45)</option>
+        <option value="70">Fiables seulement (≥ 70)</option>
+      </select>
+      <select id="fSort">
+        <option value="profit">Trier : bénéfice</option>
+        <option value="roi">Trier : rentabilité %</option>
+        <option value="conf">Trier : confiance</option>
+        <option value="price">Trier : prix d'achat</option>
+      </select>
+    </div>
+    <div id="deals" class="deals"></div>
+  </section>
+
+  <!-- Estimer -->
+  <section id="tab-estimate" class="hidden">
+    <h2>Estimer une carte</h2>
+    <p class="sub">Une offre vue sur Vinted, Leboncoin, en salon ou ailleurs ? Entre-la ici : l'application calcule sa cote, la revente nette et l'indice de confiance.</p>
+    <div class="panel">
+      <form id="estForm" class="form">
+        <div class="field" style="grid-column: span 2"><label>Carte (nom anglais + numéro)</label><input name="query" required placeholder="Umbreon VMAX 215/203"></div>
+        <div class="field"><label>Organisme</label><select name="grader"><option>PSA</option><option>BGS</option><option>CGC</option><option>SGC</option><option>TAG</option><option>ACE</option><option>PCA</option></select></div>
+        <div class="field"><label>Note</label><select name="grade"></select></div>
+        <div class="field"><label>Langue</label><select name="language"><option value="EN">Anglais</option><option value="JP">Japonais</option><option value="FR">Français</option><option value="DE">Allemand</option><option value="IT">Italien</option><option value="ES">Espagnol</option><option value="KR">Coréen</option><option value="CN">Chinois</option></select></div>
+        <div class="field"><label>Prix demandé, port compris (€)</label><input name="price" required inputmode="decimal" placeholder="650"></div>
+        <div class="field"><label><input type="checkbox" name="first_edition" style="width:auto"> 1st Edition</label></div>
+        <div class="field"><button class="btn primary" style="width:100%">Estimer</button></div>
+      </form>
+    </div>
+    <div id="estResult" style="margin-top:16px"></div>
+  </section>
+
+  <!-- Tendances -->
+  <section id="tab-trending" class="hidden">
+    <h2>Tendances du marché</h2>
+    <p class="sub">Cartes recherchées (Illustration Rare, Special Illustration Rare, Alt Art, Secret…) dont le prix Cardmarket monte le plus : moyenne des 7 derniers jours comparée à celle des 30 derniers jours. Ajoute-les à tes cartes pour que le scan les surveille.</p>
+    <div id="trending" class="grid-cards"></div>
+  </section>
+
+  <!-- Mes cartes -->
+  <section id="tab-watch" class="hidden">
+    <h2>Mes cartes surveillées</h2>
+    <p class="sub">Le scan cherche ces cartes sur eBay. Pour Vinted et Leboncoin, ouvre les liens et sauvegarde la recherche dans l'appli avec les notifications, puis vérifie les offres dans « Estimer une carte ».</p>
+    <div class="panel" style="margin-bottom:16px">
+      <form id="watchForm" class="row">
+        <input name="query" required placeholder="Ex. Charizard ex 199/165 (nom anglais + numéro)" style="flex:1; min-width:220px; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:8px 10px">
+        <button class="btn primary">Ajouter</button>
+      </form>
+    </div>
+    <div class="panel" id="watch"></div>
+  </section>
+
+  <!-- Réglages -->
+  <section id="tab-settings" class="hidden">
+    <h2>Réglages</h2>
+    <p class="sub">Appliqués dès l'enregistrement, au prochain scan.</p>
+    <div class="panel">
+      <form id="setForm" class="form"></form>
+      <div style="margin-top:16px"><b>Sites eBay scannés</b><div id="markets" class="row" style="margin-top:8px"></div></div>
+      <div class="row" style="margin-top:16px"><button id="saveSettings" class="btn primary">Enregistrer</button><span id="setMsg" class="sub" style="margin:0"></span></div>
+    </div>
+    <div class="panel" style="margin-top:16px"><b>Sources de données</b><table id="sources" style="margin-top:8px"></table></div>
+  </section>
+</main>
+<div id="tip"></div>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const eur = v => v == null ? "–" : v.toLocaleString("fr-FR", {style: "currency", currency: "EUR", maximumFractionDigits: v >= 1000 ? 0 : 2});
+const pct = v => v == null ? "–" : (v > 0 ? "+" : "") + v.toFixed(0) + " %";
+async function api(path, opts = {}) {
+  const r = await fetch(path, {headers: {"Content-Type": "application/json"}, ...opts});
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || ("Erreur " + r.status));
+  return data;
+}
+
+/* ---------- onglets ---------- */
+const loaders = {deals: loadDeals, trending: loadTrending, watch: loadWatch, settings: loadSettings, estimate: () => {}};
+$("#nav").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  document.querySelectorAll("#nav button").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll("main > section").forEach(s => s.classList.toggle("hidden", s.id !== "tab-" + b.dataset.tab));
+  loaders[b.dataset.tab]();
+});
+
+/* ---------- statut ---------- */
+let wasScanning = false;
+async function refreshStatus() {
+  try {
+    const s = await api("/api/status");
+    $("#pulse").classList.toggle("busy", s.scanning);
+    $("#scanBtn").disabled = s.scanning;
+    $("#statusText").textContent = s.scanning ? "Scan en cours…" :
+      (s.last_scan ? `Dernier scan ${s.last_scan} · prochain ${s.next_scan || "?"}` : "Premier scan en cours…");
+    const err = $("#dealsError");
+    err.classList.toggle("hidden", !s.last_error);
+    err.textContent = s.last_error ? "Le dernier scan a échoué : " + s.last_error : "";
+    if (wasScanning && !s.scanning) loadDeals();
+    wasScanning = s.scanning;
+    window.__sources = s.sources;
+  } catch { $("#statusText").textContent = "Application arrêtée : relance LANCER.bat"; $("#pulse").classList.add("busy"); }
+}
+$("#scanBtn").onclick = async () => { await api("/api/scan", {method: "POST"}); wasScanning = true; refreshStatus(); };
+setInterval(refreshStatus, 3000);
+
+/* ---------- confiance ---------- */
+function confClass(score) { return score >= 70 ? "good" : score >= 45 ? "warn" : "bad"; }
+function confBadge(c) {
+  const k = confClass(c.score), icon = {good: "✓", warn: "!", bad: "✕"}[k];
+  const color = {good: "var(--good)", warn: "var(--warn)", bad: "var(--bad)"}[k];
+  return `<span class="conf ${k}"><span class="ic">${icon}</span>${c.score}/100 · ${esc(c.label)}</span>
+          <span class="meter" title="Indice de confiance"><i style="width:${c.score}%;background:${color}"></i></span>`;
+}
+function reasonsList(c) {
+  const sym = {"+": ["plus", "+"], "-": ["minus", "−"], "!": ["warn", "!"]};
+  return `<ul class="reasons">${c.reasons.map(r => `<li><span class="k ${sym[r.kind][0]}">${sym[r.kind][1]}</span><span>${esc(r.text)}</span></li>`).join("")}</ul>`;
+}
+function trendLine(card) {
+  if (!card) return `<div class="trend">Carte non trouvée sur Cardmarket.</div>`;
+  const m = card.momentum_pct, cls = m == null ? "" : m >= 3 ? "up" : m <= -3 ? "down" : "";
+  const arrow = m == null ? "" : m >= 3 ? "▲" : m <= -3 ? "▼" : "▶";
+  return `<div class="trend">
+    <span>Cardmarket non gradée : <b>${eur(card.trend_eur)}</b></span>
+    <span>Moy. 30 j <b>${eur(card.avg30_eur)}</b> · 7 j <b>${eur(card.avg7_eur)}</b> · 1 j <b>${eur(card.avg1_eur)}</b></span>
+    <span class="${cls}">${arrow} ${esc(card.trend_label)} ${m == null ? "" : "(" + pct(m) + ")"}</span>
+    ${card.cardmarket_url ? `<a href="${esc(card.cardmarket_url)}" target="_blank" rel="noopener">Voir sur Cardmarket</a>` : ""}
+  </div>`;
+}
+
+/* Bande des prix comparables : un point par annonce, repères « cote » et « ton prix ». */
+function compsStrip(comps, market, yours) {
+  if (!comps || comps.length < 2) return "";
+  const all = comps.concat([market, yours].filter(v => v != null));
+  let lo = Math.min(...all), hi = Math.max(...all);
+  const pad = (hi - lo) * 0.08 || hi * 0.1; lo -= pad; hi += pad;
+  const W = 600, x = v => 12 + (v - lo) / (hi - lo) * (W - 24);
+  const dots = comps.map(v => `<circle cx="${x(v).toFixed(1)}" cy="30" r="5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2" data-tip="Annonce comparable : ${eur(v)}"><title>${eur(v)}</title></circle>`).join("");
+  const mark = (v, label, dash) => v == null ? "" : `
+    <line x1="${x(v)}" x2="${x(v)}" y1="12" y2="48" stroke="var(--ink-2)" stroke-width="2" ${dash ? 'stroke-dasharray="4 3"' : ""}/>
+    <text x="${x(v)}" y="64" text-anchor="${x(v) > W - 80 ? "end" : x(v) < 80 ? "start" : "middle"}" font-size="12" fill="var(--ink-2)">${label} ${eur(v)}</text>`;
+  return `<svg class="strip" viewBox="0 0 ${W} 70" role="img" aria-label="Prix des ${comps.length} annonces comparables">
+    <line x1="12" x2="${W - 12}" y1="30" y2="30" stroke="var(--border)" stroke-width="2"/>
+    ${mark(market, "Cote", true)}${mark(yours, "Prix", false)}${dots}</svg>
+    <div class="sub" style="margin:0;font-size:12px">${comps.length} annonces comparables (même note, langue, édition). Survole un point pour son prix.</div>`;
+}
+document.addEventListener("mousemove", e => {
+  const t = e.target.closest("[data-tip]"), tip = $("#tip");
+  if (!t) { tip.style.display = "none"; return; }
+  tip.textContent = t.dataset.tip; tip.style.display = "block";
+  tip.style.left = Math.min(e.clientX + 12, innerWidth - tip.offsetWidth - 8) + "px"; tip.style.top = (e.clientY - 34) + "px";
+});
+
+/* ---------- bonnes affaires ---------- */
+let DEALS = [];
+async function loadDeals() {
+  try { DEALS = await api("/api/deals"); } catch { DEALS = []; }
+  renderDeals();
+}
+["fText", "fConf", "fSort"].forEach(id => $("#" + id).addEventListener("input", renderDeals));
+function renderDeals() {
+  const q = $("#fText").value.toLowerCase(), min = +$("#fConf").value, sort = $("#fSort").value;
+  const safe = DEALS.filter(d => d.confidence.score >= 70);
+  $("#kCount").textContent = DEALS.length;
+  $("#kSafe").textContent = safe.length;
+  $("#kBest").textContent = DEALS.length ? eur(Math.max(...DEALS.map(d => d.profit_eur))) : "–";
+  $("#kSum").textContent = eur(safe.reduce((s, d) => s + d.profit_eur, 0));
+  let list = DEALS.filter(d => d.confidence.score >= min &&
+    (d.title + " " + d.grade + " " + d.platform + " " + d.query).toLowerCase().includes(q));
+  const key = {profit: d => -d.profit_eur, roi: d => -d.roi_pct, conf: d => -d.confidence.score, price: d => d.cost_eur}[sort];
+  list.sort((a, b) => key(a) - key(b));
+  $("#deals").innerHTML = list.length ? list.map(dealCard).join("") :
+    `<div class="panel empty">${DEALS.length ? "Aucune affaire ne correspond aux filtres." : "Pas encore d'affaire. Le scan tourne en continu ; ajoute des cartes dans « Mes cartes » ou « Tendances » pour élargir la recherche."}</div>`;
+}
+function dealCard(d) {
+  const v = d.valuation;
+  const ship = d.shipping ? ` + ${d.shipping.toFixed(2)} port` : " port offert";
+  return `<article class="panel deal">
+    ${d.image ? `<img src="${esc(d.image)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : '<div class="thumb"></div>'}
+    <div>
+      <h3><a href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.title)}</a></h3>
+      <div class="tags">
+        <span class="tag strong">${esc(d.grade)}</span><span class="tag">${esc(d.language)}</span>
+        ${d.first_edition ? '<span class="tag strong">1st Edition</span>' : ""}
+        <span class="tag">eBay ${esc(d.platform.replace("EBAY_", ""))}</span>
+        <span class="tag">${esc(d.seller)} · ${d.seller_feedback_pct.toFixed(1)} % · ${d.seller_feedback_score} avis</span>
+      </div>
+      <div class="nums">
+        <div class="num"><div class="l">Achat</div><div class="v">${eur(d.cost_eur)}</div><div class="l" style="text-transform:none">${d.price.toFixed(2)} ${esc(d.currency)}${ship}</div></div>
+        <div class="num"><div class="l">Cote</div><div class="v">${eur(v.market_eur)}</div></div>
+        <div class="num"><div class="l">Revente nette</div><div class="v">${eur(d.net_resale_eur)}</div></div>
+        <div class="num"><div class="l">Bénéfice</div><div class="v profit">${eur(d.profit_eur)} <small>(${pct(d.roi_pct)})</small></div></div>
+      </div>
+      ${trendLine(v.card)}
+      <details><summary>Pourquoi cette cote et cet indice ?</summary>
+        <p class="sub" style="margin:8px 0 0">Source de la cote : ${esc(v.source)}${v.pricecharting_eur ? " · PriceCharting " + eur(v.pricecharting_eur) : ""}${v.buzz ? " · Reddit : " + esc(v.buzz.label) + " (" + v.buzz.week + " posts cette semaine)" : ""}</p>
+        ${reasonsList(d.confidence)}
+        ${compsStrip(v.comps, v.market_eur, d.cost_eur)}
+      </details>
+    </div>
+    <div class="side">
+      ${confBadge(d.confidence)}
+      ${d.alert ? "" : '<span class="sub" style="margin:0;font-size:12px">Sous ton seuil d\'alerte</span>'}
+      <a class="btn primary" href="${esc(d.url)}" target="_blank" rel="noopener">Voir l'annonce</a>
+    </div>
+  </article>`;
+}
+
+/* ---------- estimer ---------- */
+const gradeSel = $("#estForm [name=grade]");
+gradeSel.innerHTML = ["10","9.5","9","8.5","8","7.5","7","6","5","4","3","2","1"].map(g => `<option>${g}</option>`).join("");
+$("#estForm").onsubmit = async e => {
+  e.preventDefault();
+  const f = new FormData(e.target), out = $("#estResult");
+  const body = Object.fromEntries(f.entries()); body.first_edition = f.has("first_edition");
+  out.innerHTML = `<div class="panel empty">Recherche des annonces comparables et des prix Cardmarket…</div>`;
+  try {
+    const r = await api("/api/estimate", {method: "POST", body: JSON.stringify(body)});
+    const s = await api("/api/settings");
+    const good = r.profit_eur >= s.values.min_profit_eur && r.roi_pct >= s.values.min_roi_pct;
+    const verdict = good ? ["good", "✓", "Bonne affaire"] : r.profit_eur > 0 ? ["warn", "!", "Marge trop faible"] : ["bad", "✕", "Pas rentable"];
+    const v = r.valuation;
+    out.innerHTML = `<div class="panel">
+      <p class="verdict"><span class="conf ${verdict[0]}"><span class="ic">${verdict[1]}</span>${verdict[2]}</span> ${esc(r.query)} · ${esc(r.grade)}</p>
+      <div class="row" style="margin-bottom:12px">${confBadge(r.confidence)}</div>
+      <div class="nums">
+        <div class="num"><div class="l">Prix demandé</div><div class="v">${eur(r.cost_eur)}</div></div>
+        <div class="num"><div class="l">Cote</div><div class="v">${eur(v.market_eur)}</div></div>
+        <div class="num"><div class="l">Revente nette</div><div class="v">${eur(r.net_resale_eur)}</div></div>
+        <div class="num"><div class="l">Bénéfice</div><div class="v ${r.profit_eur > 0 ? "profit" : "down"}">${eur(r.profit_eur)} <small>(${pct(r.roi_pct)})</small></div></div>
+      </div>
+      <p class="sub" style="margin:10px 0 0">Source : ${esc(v.source)}. Revente nette = cote − ${s.values.sell_fee_pct} % de commission − ${eur(s.values.sell_shipping_eur)} d'envoi.</p>
+      ${trendLine(v.card)}
+      ${reasonsList(r.confidence)}
+      ${compsStrip(v.comps, v.market_eur, r.cost_eur)}
+      ${r.listings.length ? `<details><summary>Voir les ${r.listings.length} annonces comparables</summary><table><thead><tr><th>Annonce</th><th>Site</th><th>Prix</th></tr></thead><tbody>
+        ${r.listings.map(l => `<tr><td><a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.title)}</a></td><td>${esc(l.source)}</td><td>${eur(l.price_eur)}</td></tr>`).join("")}
+      </tbody></table></details>` : ""}
+      <p class="sub" style="margin-top:12px">Avant d'acheter : vérifie le numéro de certification sur le site de l'organisme, les photos du boîtier, la langue et l'édition.</p>
+    </div>`;
+  } catch (err) { out.innerHTML = `<div class="notice err">${esc(err.message)}</div>`; }
+};
+
+/* ---------- tendances ---------- */
+async function loadTrending() {
+  const el = $("#trending");
+  el.innerHTML = `<div class="panel empty" style="grid-column:1/-1">Chargement des prix Cardmarket…</div>`;
+  try {
+    const cards = await api("/api/trending");
+    el.innerHTML = cards.length ? cards.map(c => `<div class="panel card">
+      <img src="${esc(c.image) || "data:,"}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+      <div class="name">${esc(c.name)} <span class="sub">#${esc(c.number)}</span></div>
+      <div class="sub" style="margin:0">${esc(c.set_name)} · ${esc(c.rarity)}</div>
+      <div class="row"><b>${eur(c.trend_eur)}</b><span class="${c.momentum_pct >= 3 ? "up" : c.momentum_pct <= -3 ? "down" : ""}">${c.momentum_pct >= 3 ? "▲" : c.momentum_pct <= -3 ? "▼" : "▶"} ${pct(c.momentum_pct)}</span></div>
+      <div class="sub" style="margin:0;font-size:12px">Moy. 30 j ${eur(c.avg30_eur)} → 7 j ${eur(c.avg7_eur)}</div>
+      <div class="row">
+        ${c.watched ? '<span class="tag">Déjà surveillée</span>' : `<button class="btn" data-add="${esc(c.query)}">Surveiller</button>`}
+        ${c.cardmarket_url ? `<a href="${esc(c.cardmarket_url)}" target="_blank" rel="noopener">Cardmarket</a>` : ""}
+      </div></div>`).join("") : `<div class="panel empty" style="grid-column:1/-1">Aucune tendance disponible.</div>`;
+  } catch (err) { el.innerHTML = `<div class="notice err" style="grid-column:1/-1">${esc(err.message)}</div>`; }
+}
+$("#trending").addEventListener("click", async e => {
+  const b = e.target.closest("[data-add]"); if (!b) return;
+  await api("/api/watch", {method: "POST", body: JSON.stringify({query: b.dataset.add})});
+  b.outerHTML = '<span class="tag">Ajoutée</span>';
+});
+
+/* ---------- mes cartes ---------- */
+async function loadWatch() {
+  const el = $("#watch");
+  el.innerHTML = `<div class="empty">Chargement…</div>`;
+  const items = await api("/api/watch");
+  el.innerHTML = items.length ? items.map(w => `<div class="watch">
+    ${w.card && w.card.image ? `<img src="${esc(w.card.image)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : '<div class="ph"></div>'}
+    <div>
+      <div class="name"><b>${esc(w.query)}</b>${w.card ? ` <span class="sub">${esc(w.card.set_name)} · ${esc(w.card.rarity)}</span>` : ""}</div>
+      ${trendLine(w.card)}
+      <div class="row" style="margin-top:6px"><a href="${esc(w.vinted)}" target="_blank" rel="noopener">Recherche Vinted</a><a href="${esc(w.leboncoin)}" target="_blank" rel="noopener">Recherche Leboncoin</a></div>
+    </div>
+    <button class="btn" data-del="${esc(w.query)}">Retirer</button></div>`).join("") :
+    `<div class="empty">Aucune carte surveillée. Ajoute-en ci-dessus ou depuis « Tendances ».</div>`;
+}
+$("#watch").addEventListener("click", async e => {
+  const b = e.target.closest("[data-del]"); if (!b) return;
+  await api("/api/watch", {method: "DELETE", body: JSON.stringify({query: b.dataset.del})});
+  loadWatch();
+});
+$("#watchForm").onsubmit = async e => {
+  e.preventDefault();
+  await api("/api/watch", {method: "POST", body: JSON.stringify({query: e.target.query.value})});
+  e.target.reset(); loadWatch();
+};
+
+/* ---------- réglages ---------- */
+const FIELDS = [
+  ["min_profit_eur", "Bénéfice minimum (€)"], ["min_roi_pct", "Rentabilité minimum (%)"],
+  ["min_confidence", "Confiance minimum pour une alerte (0-100)"], ["sell_fee_pct", "Commission de revente (%)"],
+  ["sell_shipping_eur", "Frais d'envoi à la revente (€)"], ["min_price_eur", "Prix d'achat minimum (€)"],
+  ["max_price_eur", "Prix d'achat maximum (€)"], ["min_seller_feedback_pct", "Avis positifs vendeur min. (%)"],
+  ["min_seller_feedback_score", "Nombre d'avis vendeur min."], ["scan_interval_min", "Scan toutes les (minutes)"],
+];
+const MARKET_NAMES = {EBAY_FR: "France", EBAY_DE: "Allemagne", EBAY_IT: "Italie", EBAY_ES: "Espagne", EBAY_NL: "Pays-Bas", EBAY_BE: "Belgique", EBAY_GB: "Royaume-Uni", EBAY_US: "États-Unis"};
+async function loadSettings() {
+  const s = await api("/api/settings");
+  $("#setForm").innerHTML = FIELDS.map(([k, l]) => `<div class="field"><label>${l}</label><input name="${k}" inputmode="decimal" value="${esc(s.values[k])}"></div>`).join("");
+  const on = new Set(s.values.ebay_marketplaces.split(","));
+  $("#markets").innerHTML = s.marketplaces.map(m => `<label class="tag" style="cursor:pointer"><input type="checkbox" value="${m}" ${on.has(m) ? "checked" : ""}> ${MARKET_NAMES[m] || m}</label>`).join("");
+  const src = window.__sources || {};
+  $("#sources").innerHTML = Object.entries(src).map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join("") +
+    `<tr><td>Vinted, Leboncoin</td><td>pas d'accès autorisé pour les robots : liens de recherche + « Estimer une carte »</td></tr>`;
+}
+$("#saveSettings").onclick = async () => {
+  const body = Object.fromEntries(new FormData($("#setForm")).entries());
+  body.ebay_marketplaces = [...document.querySelectorAll("#markets input:checked")].map(i => i.value).join(",");
+  try { await api("/api/settings", {method: "POST", body: JSON.stringify(body)}); $("#setMsg").textContent = "Enregistré."; }
+  catch (err) { $("#setMsg").textContent = err.message; }
+};
+
+refreshStatus(); loadDeals();
+</script>
+</body>
+</html>

@@ -1,35 +1,57 @@
-# Bot deals Pokémon
+# Pokémon Deals
 
-Bot Telegram qui surveille les annonces eBay de **cartes Pokémon gradées** (PSA, BGS, CGC, SGC, TAG…),
-compare leur prix à la cote du marché et t'envoie celles qui laissent une marge de revente
-**après frais**.
+Application PC qui repère les **cartes Pokémon gradées** (PSA, BGS, CGC, SGC, TAG…) vendues sous
+leur cote, calcule la **marge de revente après frais** et donne un **indice de confiance** qui
+croise plusieurs sources fiables. Les alertes arrivent aussi sur Telegram.
 
-## Ce qu'il fait
+## L'application
 
-1. Toutes les `SCAN_INTERVAL_MIN` minutes, pour chaque carte de ta liste, il cherche sur eBay
-   (FR, DE, UK, US… au choix) les annonces en achat immédiat, à l'état « Gradée ».
-2. Il garde uniquement les cartes vérifiées : une note d'un organisme de gradation reconnu dans le
-   titre, et aucun mot suspect (proxy, custom, lot, boîtier vide, « PSA ready », non gradée…).
-3. Il écarte les vendeurs peu fiables (moins de 98 % d'avis positifs ou moins de 50 avis, réglable).
-4. Il calcule la cote de la carte **pour la même note** :
-   - avec [PriceCharting](https://www.pricecharting.com/api-documentation) si tu as un token
-     (prix réellement vendus pour PSA 10, BGS 9.5, CGC 10…) ;
-   - sinon, avec la médiane des annonces comparables (même carte, même organisme, même note),
-     sans les valeurs aberrantes et minorée de 10 %, parce qu'un prix demandé est plus haut
-     qu'un prix vendu.
-5. Il calcule le bénéfice : `cote × (1 − commission) − envoi − prix d'achat port compris`.
-   Si le bénéfice dépasse `MIN_PROFIT_EUR` **et** que le ROI dépasse `MIN_ROI_PCT`, tu reçois l'alerte.
-   Une annonce n'est signalée qu'une fois, ou de nouveau si son prix baisse.
+`LANCER.bat` ouvre l'application dans ton navigateur (http://localhost:8765). Elle a 5 onglets :
 
-Exemple d'alerte :
+- **Bonnes affaires** : chaque annonce rentable avec photo, prix d'achat port compris, cote,
+  revente nette, bénéfice, tendance Cardmarket et indice de confiance (🟢 Fiable ≥ 70,
+  🟡 À vérifier ≥ 45, 🔴 Risqué). « Pourquoi ? » détaille chaque point gagné ou perdu, et montre les
+  prix de toutes les annonces comparables.
+- **Estimer une carte** : pour une offre vue sur Vinted, Leboncoin, en salon… Entre la carte,
+  la note, la langue et le prix : verdict, cote, marge, indice de confiance et liste des annonces
+  comparables.
+- **Tendances** : cartes recherchées (Illustration Rare, Alt Art, Secret…) dont le prix Cardmarket
+  monte le plus. Un clic sur « Surveiller » les ajoute au scan.
+- **Mes cartes** : les cartes surveillées, leur prix et leur tendance, et leurs recherches Vinted
+  et Leboncoin toutes prêtes.
+- **Réglages** : seuils, frais, budget, sites eBay scannés, fréquence du scan.
 
-```
-🔥 Umbreon VMAX 215/203 Evolving Skies PSA 10 GEM MINT
-🏷 PSA 10 · EBAY_DE · vendeur cardshop (99.9 %, 2140 avis)
-💶 Achat : 890.00 € port compris
-📈 Cote : 1260.00 € (médiane de 14 annonces PSA 10)
-💰 Revente nette : 1088.20 € → +198.20 € (+22 %)
-```
+## D'où viennent les données
+
+| Source | Rôle | Fiabilité |
+|---|---|---|
+| eBay (API officielle) | annonces à acheter, prix des annonces comparables | prix demandés, pas vendus : la médiane est minorée de 10 % |
+| Cardmarket et TCGplayer, via [pokemontcg.io](https://pokemontcg.io) | identification de la carte, prix non gradé, tendance 1, 7 et 30 jours | prix de vente réels, cartes non gradées |
+| PriceCharting (optionnel, payant) | cote gradée par note | ventes réelles, la plus fiable pour les cartes gradées |
+| Reddit (optionnel, gratuit) | volume de discussions de la semaine par rapport au mois | signal d'intérêt du public, faible poids |
+
+**Vinted et Leboncoin** n'ont pas d'accès officiel et interdisent les robots : l'application ne
+lit pas leurs annonces. Elle prépare tes recherches (à sauvegarder dans leurs applis avec les
+notifications), et l'onglet « Estimer une carte » te dit si une offre est rentable.
+
+### L'indice de confiance
+
+Il part de 20 et gagne ou perd des points selon :
+- le nombre d'annonces comparables et l'homogénéité de leurs prix ;
+- l'accord avec PriceCharting (si configuré) ;
+- la cohérence avec le prix non gradé Cardmarket (une PSA 10 qui coterait moins que la carte non
+  gradée est suspecte) ;
+- la tendance du prix Cardmarket (une forte baisse rend la revente plus dure) ;
+- le buzz Reddit (si configuré) ;
+- l'ancienneté du vendeur et la langue indiquée dans le titre.
+
+Seules les affaires au-dessus de `MIN_CONFIDENCE` (50 par défaut) déclenchent une alerte Telegram.
+Les prix ne sont comparés qu'entre cartes **de même note, même langue et même édition**
+(1st Edition ou non).
+
+**Aucun indice ne garantit une revente.** Avant d'acheter, vérifie toujours le numéro de
+certification sur le site de l'organisme, les photos du boîtier, la langue et l'édition, et
+regarde les prix réellement vendus (eBay, filtre « Objets vendus »).
 
 ## Installation sur Windows (le plus simple)
 
@@ -44,7 +66,8 @@ Exemple d'alerte :
    - d'envoyer `/start` à ton bot : il reconnaît ton compte tout seul.
 
    Il vérifie chaque clé, puis enregistre tout dans `.env`. Ensuite, un double-clic sur
-   `LANCER.bat` suffit. Le bot tourne tant que la fenêtre reste ouverte.
+   `LANCER.bat` suffit. L'application s'ouvre dans ton navigateur, et les scans tournent tant
+   que la fenêtre noire reste ouverte.
 
 ## Installation sur Mac ou Linux
 
@@ -52,13 +75,13 @@ Exemple d'alerte :
 cd pokemon-bot
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python bot.py   # l'assistant de configuration se lance au premier démarrage
+python app.py   # l'assistant de configuration se lance au premier démarrage
 ```
 
 Pour qu'il tourne en permanence, lance-le sur un serveur ou un VPS (un service systemd ou un
 conteneur, par exemple).
 
-## Commandes
+## Commandes Telegram
 
 | Commande | Rôle |
 |---|---|
@@ -73,28 +96,23 @@ conteneur, par exemple).
 
 ## Réglages (`.env`)
 
+La plupart se changent aussi dans l'onglet Réglages de l'application, qui a la priorité.
+
+
 | Variable | Défaut | Rôle |
 |---|---|---|
 | `EBAY_MARKETPLACES` | `EBAY_FR,EBAY_DE` | sites eBay scannés |
 | `MIN_PROFIT_EUR` / `MIN_ROI_PCT` | 30 / 15 | seuils d'alerte |
+| `MIN_CONFIDENCE` | 50 | indice de confiance minimal pour une alerte |
+| `POKEMONTCG_API_KEY` | vide | clé gratuite pokemontcg.io (plus de requêtes) |
+| `REDDIT_CLIENT_ID` / `REDDIT_CLIENT_SECRET` | vide | buzz Reddit (clés gratuites, type « script ») |
+| `WEB_PORT` | 8765 | port de l'application |
 | `SELL_FEE_PCT` / `SELL_SHIPPING_EUR` | 13 / 8 | frais de ta revente |
 | `MIN_SELLER_FEEDBACK_PCT` / `MIN_SELLER_FEEDBACK_SCORE` | 98 / 50 | fiabilité des vendeurs |
 | `MIN_PRICE_EUR` / `MAX_PRICE_EUR` | 20 / 2000 | budget d'achat |
 | `PRICECHARTING_TOKEN` | vide | cotes gradées fiables (payant) |
 | `COMPS_DISCOUNT_PCT` | 10 | décote de la médiane des annonces |
 | `USD_TO_EUR` / `GBP_TO_EUR` | 0.92 / 1.17 | conversion des annonces US / UK |
-
-## Sources de vente
-
-- **eBay** : branché, via l'API officielle.
-- **Cardmarket** : son API est réservée aux vendeurs professionnels approuvés. Si tu obtiens un
-  accès, il suffit d'ajouter un client qui renvoie des `Listing` comme `pokedeals/ebay.py`.
-- **TCGplayer** : l'API n'accepte plus de nouveaux développeurs.
-- **Vinted, Leboncoin, Facebook Marketplace** : pas d'API publique, et leurs conditions
-  d'utilisation interdisent le scraping (Leboncoin bloque les robots). Le bot ne lit donc pas
-  leurs annonces. À la place, `/liens` te donne les recherches toutes prêtes : tu les sauvegardes
-  dans l'appli avec les notifications, et quand une annonce sort, `/estimer` te dit si elle est
-  rentable d'après la cote eBay.
 
 ## Limites à connaître
 
@@ -104,8 +122,9 @@ conteneur, par exemple).
   - que les photos montrent bien le boîtier annoncé ;
   - la langue et l'édition de la carte : une carte japonaise ou non 1st Edition vaut
     beaucoup moins.
-- Sans PriceCharting, la cote vient des prix demandés, pas des prix vendus. Plus il y a
-  d'annonces comparables, plus elle est fiable, et l'alerte indique combien il y en avait.
+- Sans PriceCharting, la cote gradée vient des prix demandés sur eBay, pas des prix vendus.
+  L'indice de confiance le prend en compte, mais reste une estimation.
+- La langue est lue dans le titre de l'annonce : sans mention, la carte est supposée anglaise.
 - Avec PriceCharting, la carte est trouvée d'après ta recherche. Une recherche précise (nom,
   numéro, extension) évite de comparer avec la mauvaise carte.
 - La fiscalité de la revente régulière (auto-entrepreneur, déclaration des plateformes) reste

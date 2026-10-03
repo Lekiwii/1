@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 cd /d "%~dp0"
-title Bot Pokemon
+title Pokemon Deals
 
 set "PY="
 where py >nul 2>nul && set "PY=py -3"
@@ -17,12 +17,13 @@ if not exist ".venv\Scripts\python.exe" (
     echo Installation (premiere fois uniquement, 1 a 2 minutes^)...
     %PY% -m venv .venv || goto :erreur
     ".venv\Scripts\python.exe" -m pip install --quiet --upgrade pip
-    ".venv\Scripts\python.exe" -m pip install --quiet -r requirements.txt || goto :erreur
 )
+echo Verification des composants...
+".venv\Scripts\python.exe" -m pip install --quiet --disable-pip-version-check -r requirements.txt || goto :erreur
 
-".venv\Scripts\python.exe" bot.py
+".venv\Scripts\python.exe" app.py
 echo.
-echo Le bot s'est arrete. Ferme cette fenetre ou relance LANCER.bat.
+echo L'application s'est arretee. Ferme cette fenetre ou relance LANCER.bat.
 pause
 exit /b 0
 

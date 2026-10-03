@@ -27,6 +27,7 @@ class Storage:
                 at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
             CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
+            CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
             """
         )
         if self._db.execute("SELECT value FROM meta WHERE key='seeded'").fetchone() is None:
@@ -57,4 +58,21 @@ class Storage:
             "ON CONFLICT(item_id) DO UPDATE SET price = excluded.price, at = CURRENT_TIMESTAMP",
             (item_id, price),
         )
+        self._db.commit()
+
+    def settings(self) -> dict[str, str]:
+        return dict(self._db.execute("SELECT key, value FROM settings"))
+
+    def save_setting(self, key: str, value: str) -> None:
+        self._db.execute(
+            "INSERT INTO settings VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", (key, value)
+        )
+        self._db.commit()
+
+    def get_meta(self, key: str) -> str | None:
+        row = self._db.execute("SELECT value FROM meta WHERE key = ?", (key,)).fetchone()
+        return row[0] if row else None
+
+    def set_meta(self, key: str, value: str) -> None:
+        self._db.execute("INSERT INTO meta VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", (key, value))
         self._db.commit()

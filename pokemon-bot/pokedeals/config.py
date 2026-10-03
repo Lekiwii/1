@@ -39,6 +39,11 @@ class Config:
     min_price_eur: float = 20
     max_price_eur: float = 2000
     scan_interval_min: float = 15
+    min_confidence: float = 50
+    pokemontcg_api_key: str = ""
+    reddit_client_id: str = ""
+    reddit_client_secret: str = ""
+    web_port: int = 8765
     db_path: str = "pokedeals.sqlite3"
 
     @classmethod
@@ -65,5 +70,29 @@ class Config:
             min_price_eur=_float("MIN_PRICE_EUR", 20),
             max_price_eur=_float("MAX_PRICE_EUR", 2000),
             scan_interval_min=_float("SCAN_INTERVAL_MIN", 15),
+            min_confidence=_float("MIN_CONFIDENCE", 50),
+            pokemontcg_api_key=os.environ.get("POKEMONTCG_API_KEY", ""),
+            reddit_client_id=os.environ.get("REDDIT_CLIENT_ID", ""),
+            reddit_client_secret=os.environ.get("REDDIT_CLIENT_SECRET", ""),
+            web_port=int(_float("WEB_PORT", 8765)),
             db_path=os.environ.get("DB_PATH", "pokedeals.sqlite3"),
         )
+
+
+# Réglages modifiables depuis l'application (enregistrés en base, prioritaires sur .env)
+EDITABLE = {
+    "min_profit_eur": float, "min_roi_pct": float, "min_confidence": float,
+    "sell_fee_pct": float, "sell_shipping_eur": float,
+    "min_seller_feedback_pct": float, "min_seller_feedback_score": int,
+    "min_price_eur": float, "max_price_eur": float, "scan_interval_min": float,
+    "ebay_marketplaces": list,
+}
+
+
+def apply_overrides(cfg: Config, overrides: dict[str, str]) -> None:
+    for key, raw in overrides.items():
+        kind = EDITABLE.get(key)
+        if kind is list:
+            setattr(cfg, key, [m.strip() for m in raw.split(",") if m.strip()])
+        elif kind:
+            setattr(cfg, key, kind(float(raw)))
