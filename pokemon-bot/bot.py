@@ -1,5 +1,6 @@
 """Bot Telegram : scanne eBay et envoie les cartes Pokémon gradées vendues sous leur cote."""
 import html
+from datetime import datetime, timedelta
 import logging
 import os
 import sys
@@ -19,11 +20,13 @@ from pokedeals.storage import Storage
 
 logging.basicConfig(format="%(asctime)s %(levelname)s %(name)s: %(message)s", level=logging.INFO)
 logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("apscheduler").setLevel(logging.WARNING)
 log = logging.getLogger("pokedeals")
 
 HELP = (
     "<b>Bot deals Pokémon</b> — cartes gradées (PSA, BGS, CGC, SGC…) vendues sous leur cote.\n\n"
-    "/scan — lancer un scan maintenant\n"
+    "/scan — lancer un scan maintenant (et revoir les meilleures affaires)\n"
+    "/statut — vérifier que le bot tourne et voir le prochain scan\n"
     "/liste — cartes surveillées\n"
     "/ajouter &lt;carte&gt; — ex. <code>/ajouter Charizard ex 199/165</code>\n"
     "/retirer &lt;carte&gt; — arrêter de surveiller une carte\n"
@@ -49,17 +52,31 @@ def format_deal(deal: Deal) -> str:
     )
 
 
-async def run_scan(app: Application, chat_id: int, announce_empty: bool) -> None:
+async def run_scan(app: Application, chat_id: int, manual: bool) -> None:
     cfg: Config = app.bot_data["cfg"]
     storage: Storage = app.bot_data["storage"]
     deals = await find_deals(storage.watchlist(), cfg, app.bot_data["ebay"], app.bot_data["pricecharting"])
     fresh = [d for d in deals if storage.is_new_alert(d.listing.item_id, d.cost_eur)]
-    log.info("Scan : %d bonnes affaires, %d nouvelles", len(deals), len(fresh))
+    now = datetime.now()
+    app.bot_data["last_scan"] = (now, len(deals), len(fresh))
+    next_scan = (now + timedelta(minutes=cfg.scan_interval_min)).strftime("%H:%M")
+    print(
+        f"[{now:%H:%M}] Scan terminé : {len(deals)} bonnes affaires en ligne, {len(fresh)} nouvelles envoyées."
+        f" Prochain scan automatique vers {next_scan}.",
+        flush=True,
+    )
     for deal in fresh:
         await app.bot.send_message(chat_id, format_deal(deal), parse_mode=ParseMode.HTML)
         storage.mark_alerted(deal.listing.item_id, deal.cost_eur)
-    if announce_empty and not fresh:
-        await app.bot.send_message(chat_id, "Aucune nouvelle bonne affaire pour l'instant.")
+    if manual and not fresh:
+        if not deals:
+            await app.bot.send_message(chat_id, "Aucune bonne affaire en ligne pour l'instant.")
+            return
+        await app.bot.send_message(
+            chat_id, f"Rien de nouveau depuis le dernier scan. Les meilleures affaires encore en ligne :"
+        )
+        for deal in deals[:5]:
+            await app.bot.send_message(chat_id, format_deal(deal), parse_mode=ParseMode.HTML)
 
 
 def authorized(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
@@ -81,7 +98,7 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not authorized(update, context):
         return
     await update.message.reply_text("Scan en cours…")
-    await run_scan(context.application, update.effective_chat.id, announce_empty=True)
+    await run_scan(context.application, update.effective_chat.id, manual=True)
 
 
 async def liste(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -176,9 +193,29 @@ async def liens(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
 
 
+async def statut(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not authorized(update, context):
+        return
+    cfg: Config = context.bot_data["cfg"]
+    last = context.bot_data.get("last_scan")
+    jobs = context.job_queue.get_jobs_by_name("scheduled_scan")
+    next_run = jobs[0].next_t.astimezone().strftime("%H:%M") if jobs and jobs[0].next_t else "?"
+    if last:
+        at, found, sent = last
+        summary = f"Dernier scan : {at:%H:%M}, {found} bonnes affaires en ligne, {sent} nouvelles envoyées."
+    else:
+        summary = "Pas encore de scan depuis le démarrage."
+    await update.message.reply_text(
+        f"✅ Le bot tourne.\n{summary}\nProchain scan automatique : {next_run} "
+        f"(toutes les {cfg.scan_interval_min:.0f} min).\n"
+        f"Cartes surveillées : {len(context.bot_data['storage'].watchlist())}.\n"
+        "Il ne t'écrit que pour les nouvelles affaires. /scan pour revoir les meilleures."
+    )
+
+
 async def scheduled_scan(context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
-        await run_scan(context.application, context.bot_data["cfg"].telegram_chat_id, announce_empty=False)
+        await run_scan(context.application, context.bot_data["cfg"].telegram_chat_id, manual=False)
     except Exception:
         log.exception("Scan automatique échoué")
 
@@ -192,7 +229,9 @@ async def post_init(app: Application) -> None:
         PriceCharting(cfg.pricecharting_token, cfg.usd_to_eur, http) if cfg.pricecharting_token else None
     )
     if cfg.telegram_chat_id is not None:
-        app.job_queue.run_repeating(scheduled_scan, interval=cfg.scan_interval_min * 60, first=10)
+        app.job_queue.run_repeating(
+            scheduled_scan, interval=cfg.scan_interval_min * 60, first=10, name="scheduled_scan"
+        )
 
 
 async def post_shutdown(app: Application) -> None:
@@ -218,7 +257,7 @@ def main() -> None:
     app.bot_data["storage"] = Storage(cfg.db_path)
     for name, handler in [("start", start), ("help", start), ("scan", scan), ("liste", liste),
                           ("ajouter", ajouter), ("retirer", retirer), ("regles", regles),
-                          ("estimer", estimer), ("liens", liens)]:
+                          ("estimer", estimer), ("liens", liens), ("statut", statut)]:
         app.add_handler(CommandHandler(name, handler))
     app.run_polling()
 

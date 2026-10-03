@@ -62,7 +62,8 @@ conteneur, par exemple).
 
 | Commande | Rôle |
 |---|---|
-| `/scan` | lancer un scan tout de suite |
+| `/scan` | lancer un scan tout de suite ; s'il n'y a rien de nouveau, il renvoie les 5 meilleures affaires encore en ligne |
+| `/statut` | vérifier que le bot tourne : heure du dernier scan et du prochain |
 | `/liste` | cartes surveillées (10 cartes phares au départ) |
 | `/ajouter Charizard ex 199/165` | surveiller une carte : mets le nom **et le numéro** pour éviter les mélanges |
 | `/retirer Charizard ex 199/165` | ne plus la surveiller |
