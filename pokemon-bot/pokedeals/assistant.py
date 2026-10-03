@@ -73,7 +73,18 @@ def run(values: dict[str, str]) -> None:
             _set("EBAY_CLIENT_ID", client_id)
             _set("EBAY_CLIENT_SECRET", secret)
             break
-        print("   eBay refuse ces clés (vérifie que ce sont les clés Production). Recommence.")
+        try:
+            reason = resp.json().get("error_description") or resp.json().get("error") or resp.text
+        except ValueError:
+            reason = resp.text
+        print(f"   eBay refuse ces clés (code {resp.status_code}) : {reason}")
+        if resp.status_code == 401:
+            print(
+                "   Si tu as bien copié l'App ID et le Cert ID de la colonne Production, eBay a sans doute\n"
+                "   désactivé ces clés : sur developer.ebay.com > Application Keysets, règle\n"
+                "   « Marketplace account deletion » sur « Not persisting eBay data », puis relance LANCER.bat."
+            )
+            raise SystemExit(1)
         client_id = secret = ""
 
     if not values.get("TELEGRAM_CHAT_ID"):
